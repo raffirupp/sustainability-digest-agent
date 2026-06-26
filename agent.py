@@ -403,7 +403,7 @@ def main() -> int:
         save_state(state)
         return 0
 
-    client = OpenAI()
+    client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "").strip())
 
     relevant = filter_articles(client, items)
     print(f"-> {len(relevant)} relevant articles found.")
