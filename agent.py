@@ -215,13 +215,13 @@ def build_digest_prompt(relevant: list[dict]) -> str:
 {articles}
 
 Organise these into the following 12 topics. For each topic:
-- Schreibe eine Zusammenfassung auf Deutsch (3-5 Sätze je nach Relevanz), die KONKRET und PRAXISORIENTIERT ist:
-  * Nenne die genaue Verordnung/Richtlinie mit offiziellem Namen (nicht nur "neue Regeln")
-  * Nenne konkrete Deadlines, Übergangsfristen oder Zeitpläne wenn bekannt
-  * Sag genau was das Startup TUN oder BEOBACHTEN muss – was ändert sich operativ?
-  * Bei mehreren Entwicklungen pro Thema: alle erwähnen, nicht nur die erste
-  * Vermeide generische Formulierungen wie "Compliance sicherstellen" – was bedeutet Compliance hier konkret?
-- Bewerte die Dringlichkeit: "high" (Deadline ≤12 Monate oder sofortiger Handlungsbedarf), "medium" (beobachten, 1-2 Jahre), "low" (Frühphase, zur Info)
+- Schreibe eine Zusammenfassung auf Deutsch (3-5 Sätze), sachlich und entspannt im Ton – keine Alarmsprache:
+  * Nenne die genaue Verordnung/Richtlinie mit offiziellem Namen
+  * Erwähne Deadlines oder Zeitpläne wenn bekannt, aber ohne Drama
+  * Erkläre konkret was das bedeutet – was ändert sich für das Startup operativ?
+  * Bei mehreren Entwicklungen pro Thema: alle kurz erwähnen
+  * Duze die Lesenden (ihr/euch) – kein "Sie"
+- Bewerte die Dringlichkeit: "high" (Deadline ≤12 Monate), "medium" (1-2 Jahre), "low" (Frühphase)
 - Wähle bis zu 3 der relevantesten Artikel-Links mit kurzen deutschen Titeln
 - Falls keine Artikel zu einem Thema passen: summary auf null setzen und urgency auf "none"
 
@@ -323,7 +323,16 @@ def post_to_slack(digest: dict, n_articles: int) -> None:
 
 URGENCY_COLOR  = {"high": "#C0392B", "medium": "#E67E22", "low": "#27AE60", "none": "#95A5A6"}
 URGENCY_BG     = {"high": "#FDEDEC", "medium": "#FEF9E7", "low": "#EAFAF1", "none": "#F2F3F4"}
-URGENCY_LABEL  = {"high": "DRINGEND", "medium": "BEOBACHTEN", "low": "ZUR INFO", "none": ""}
+URGENCY_LABEL  = {"high": "Handlungsbedarf", "medium": "Im Blick behalten", "low": "Zur Info", "none": ""}
+
+
+def _domain(url: str) -> str:
+    try:
+        from urllib.parse import urlparse
+        host = urlparse(url).netloc.lower()
+        return host.removeprefix("www.")
+    except Exception:
+        return ""
 
 
 def build_email_html(digest: dict, n_articles: int) -> str:
@@ -341,9 +350,12 @@ def build_email_html(digest: dict, n_articles: int) -> str:
         bg      = URGENCY_BG.get(urgency, "#F2F3F4")
         label   = URGENCY_LABEL.get(urgency, "")
         links_html = "".join(
-            f'<a href="{l["url"]}" style="display:inline-block;margin:4px 8px 4px 0;padding:5px 12px;'
-            f'background:#1B4332;color:#fff;text-decoration:none;border-radius:20px;font-size:12px;font-weight:600;">'
-            f'{l["title"]}</a>'
+            f'<a href="{l["url"]}" style="display:inline-block;margin:4px 8px 4px 0;padding:5px 14px;'
+            f'background:#F0F7F4;color:#1B4332;text-decoration:none;border-radius:20px;font-size:12px;'
+            f'font-weight:600;border:1px solid #B7E4C7;">'
+            f'{l["title"]}'
+            f'<span style="font-weight:400;opacity:.7;margin-left:6px;">— {_domain(l["url"])}</span>'
+            f'</a>'
             for l in topic.get("links", [])[:3]
         )
         topic_blocks += f"""
