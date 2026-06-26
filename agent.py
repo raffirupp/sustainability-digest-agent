@@ -328,6 +328,8 @@ def build_email_html(digest: dict, n_articles: int) -> str:
     has_news = [t for t in topics if t.get("urgency") != "none" and t.get("summary")]
     no_news = [t["name"] for t in topics if t.get("urgency") == "none" or not t.get("summary")]
 
+    active_topics = ", ".join(t["name"] for t in has_news)
+
     topic_blocks = ""
     for topic in has_news:
         urgency = topic.get("urgency", "low")
@@ -355,17 +357,49 @@ def build_email_html(digest: dict, n_articles: int) -> str:
     return f"""
     <!DOCTYPE html><html><body style="margin:0;padding:0;background:#f1f3f4;font-family:Arial,sans-serif;">
     <div style="max-width:620px;margin:32px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.15);">
+
+      <!-- Header -->
       <div style="background:#1a73e8;padding:28px 32px;">
         <div style="color:#fff;font-size:22px;font-weight:700;">Sustainability Regulation Digest</div>
         <div style="color:#c5d8f6;font-size:14px;margin-top:4px;">{month} &nbsp;·&nbsp; {n_articles} relevant articles</div>
       </div>
-      <div style="padding:28px 32px;">
+
+      <!-- Greeting -->
+      <div style="padding:24px 32px 0 32px;">
+        <p style="font-size:15px;color:#202124;line-height:1.7;margin:0;">
+          Lieber Max, liebe Einhornler,<br><br>
+          das ist euer monatliches Regulierungs-Update zu den Themen
+          <strong>{active_topics}</strong>.
+          Hier sind die wichtigsten Entwicklungen des Monats:
+        </p>
+      </div>
+
+      <!-- Topics -->
+      <div style="padding:20px 32px;">
         {topic_blocks}
         {no_news_html}
       </div>
-      <div style="padding:16px 32px;background:#f8f9fa;border-top:1px solid #e8eaed;font-size:12px;color:#9e9e9e;">
-        Automated digest · Powered by OpenAI &amp; Google News
+
+      <!-- Contact -->
+      <div style="padding:16px 32px;background:#e8f0fe;border-top:1px solid #c5d8f6;">
+        <p style="font-size:14px;color:#1a73e8;margin:0;">
+          Wenn ihr Fragen dazu habt, meldet euch gerne bei
+          <a href="mailto:raffiruppert@gmail.com" style="color:#1a73e8;font-weight:600;">raffiruppert@gmail.com</a>
+        </p>
       </div>
+
+      <!-- Technical explanation -->
+      <div style="padding:20px 32px;background:#f8f9fa;border-top:1px solid #e8eaed;">
+        <p style="font-size:12px;color:#5f6368;margin:0 0 8px 0;font-weight:600;letter-spacing:.5px;">WIE FUNKTIONIERT DAS?</p>
+        <p style="font-size:12px;color:#80868b;line-height:1.6;margin:0;">
+          Diese E-Mail wird automatisch am 1. jedes Monats verschickt – ohne dass jemand etwas tun muss.
+          Ein Python-Skript läuft auf GitHub Actions, liest sechs Nachrichtenfeeds zu EU-Regulierungen
+          (insgesamt ~50 Artikel) und schickt sie an OpenAI (GPT-4o-mini). Die KI entscheidet welche
+          Artikel für uns als Hersteller von Kondomen und Periodenprodukten relevant sind, gruppiert sie
+          nach Themen und schreibt die Zusammenfassungen. Das kostet ca. 0,01 € pro Monat.
+        </p>
+      </div>
+
     </div>
     </body></html>"""
 
