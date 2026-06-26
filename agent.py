@@ -33,7 +33,7 @@ SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", "")
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 RELEVANCE_CRITERIA = os.environ.get("RELEVANCE_CRITERIA", "EU sustainability legislation.")
 STATE_FILE = Path(os.environ.get("STATE_FILE", "state.json"))
-MAX_ITEMS_PER_RUN = int(os.environ.get("MAX_ITEMS_PER_RUN", "50"))
+MAX_ITEMS_PER_RUN = int(os.environ.get("MAX_ITEMS_PER_RUN", "120"))
 POST_ON_FIRST_RUN = os.environ.get("POST_ON_FIRST_RUN", "false").lower() == "true"
 EMAIL_FROM = os.environ.get("EMAIL_FROM", "")
 EMAIL_TO = [a.strip() for a in os.environ.get("EMAIL_TO", "").split(",") if a.strip()]
@@ -215,12 +215,13 @@ def build_digest_prompt(relevant: list[dict]) -> str:
 {articles}
 
 Organise these into the following 12 topics. For each topic:
-- Schreibe eine 2-3-Satz-Zusammenfassung auf Deutsch, die KONKRET und PRAXISORIENTIERT ist:
-  * Nenne die genaue Verordnung/Richtlinie (nicht nur "neue Regeln")
-  * Nenne konkrete Deadlines oder Zeitpläne wenn bekannt
-  * Sag genau was das Startup TUN oder BEOBACHTEN muss (keine generischen Ratschläge)
-  * Vermeide Phrasen wie "das Unternehmen muss Compliance sicherstellen" – sei spezifisch was das bedeutet
-- Bewerte die Dringlichkeit: "high" (Deadline in 12 Monaten oder sofortiger Handlungsbedarf), "medium" (beobachten, 1-2 Jahre), "low" (Frühphase, zur Info)
+- Schreibe eine Zusammenfassung auf Deutsch (3-5 Sätze je nach Relevanz), die KONKRET und PRAXISORIENTIERT ist:
+  * Nenne die genaue Verordnung/Richtlinie mit offiziellem Namen (nicht nur "neue Regeln")
+  * Nenne konkrete Deadlines, Übergangsfristen oder Zeitpläne wenn bekannt
+  * Sag genau was das Startup TUN oder BEOBACHTEN muss – was ändert sich operativ?
+  * Bei mehreren Entwicklungen pro Thema: alle erwähnen, nicht nur die erste
+  * Vermeide generische Formulierungen wie "Compliance sicherstellen" – was bedeutet Compliance hier konkret?
+- Bewerte die Dringlichkeit: "high" (Deadline ≤12 Monate oder sofortiger Handlungsbedarf), "medium" (beobachten, 1-2 Jahre), "low" (Frühphase, zur Info)
 - Wähle bis zu 3 der relevantesten Artikel-Links mit kurzen deutschen Titeln
 - Falls keine Artikel zu einem Thema passen: summary auf null setzen und urgency auf "none"
 
