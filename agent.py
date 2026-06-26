@@ -83,6 +83,26 @@ def entry_id(entry) -> str:
     return getattr(entry, "id", None) or getattr(entry, "link", None) or getattr(entry, "title", "")
 
 
+def resolve_url(url: str) -> str:
+    """Follow Google News redirects to get the real article URL."""
+    if "news.google.com" not in url:
+        return url
+    try:
+        resp = requests.get(url, allow_redirects=True, timeout=8, stream=True)
+        resp.close()
+        return resp.url
+    except Exception:
+        return url
+
+
+def resolve_digest_links(digest: dict) -> dict:
+    """Replace Google News redirect URLs with real article URLs in the digest."""
+    for topic in digest.get("topics", []):
+        for link in topic.get("links", []):
+            link["url"] = resolve_url(link["url"])
+    return digest
+
+
 def fetch_new_entries(seen_ids: set) -> list[dict]:
     new = []
     for url in FEED_URLS:
@@ -193,9 +213,13 @@ def build_digest_prompt(relevant: list[dict]) -> str:
 {articles}
 
 Organise these into the following 12 topics. For each topic:
-- Write a 2-3 sentence practical summary (what changed, what does the startup need to know/do)
-- Rate urgency: "high" (action or close monitoring needed), "medium" (watch), "low" (FYI)
-- Pick up to 3 most relevant article links with short titles
+- Write a 2-3 sentence summary that is SPECIFIC and PRACTICAL:
+  * Name the actual regulation/directive (not just "new rules")
+  * State the concrete deadline or timeline if known
+  * Say exactly what the startup needs to DO or WATCH (not generic advice)
+  * Avoid phrases like "the startup must ensure compliance" – be specific about what compliance means here
+- Rate urgency: "high" (deadline within 12 months or immediate action needed), "medium" (watch closely, 1-2 years), "low" (early stage, FYI)
+- Pick up to 3 most relevant article links with short descriptive titles
 - If no articles fit a topic, set summary to null and urgency to "none"
 
 Topics:
@@ -418,6 +442,9 @@ def main() -> int:
     if not digest:
         print("ERROR: Could not create digest.", file=sys.stderr)
         return 1
+
+    print("-> resolving article links...")
+    digest = resolve_digest_links(digest)
 
     if args.dry_run:
         print("\n--- DRY RUN ---")
