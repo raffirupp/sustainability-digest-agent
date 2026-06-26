@@ -129,9 +129,10 @@ def fetch_new_entries(seen_ids: set) -> list[dict]:
 # Step 1: Filter relevant articles
 # --------------------------------------------------------------------------- #
 
-FILTER_SYSTEM = """You are a compliance assistant pre-screening regulatory news for a sustainability manager.
-You receive articles and a relevance criterion. For EACH article, assess relevance briefly.
-Reply ONLY with valid JSON, no markdown, no preamble."""
+FILTER_SYSTEM = """Du bist ein Compliance-Assistent, der Regulierungsnews für einen Nachhaltigkeitsmanager vorsortiert.
+Du erhältst Artikel und ein Relevanzkriterium. Beurteile für JEDEN Artikel kurz die Relevanz.
+Schreibe Schlagzeilen und Zusammenfassungen auf Deutsch.
+Antworte NUR mit gültigem JSON, kein Markdown, keine Einleitung."""
 
 
 def build_filter_prompt(items: list[dict]) -> str:
@@ -192,13 +193,14 @@ def filter_articles(client: OpenAI, items: list[dict]) -> list[dict]:
 # Step 2: Synthesise structured digest
 # --------------------------------------------------------------------------- #
 
-DIGEST_SYSTEM = """You are writing a monthly sustainability regulation digest for a small German startup
-(17 employees) manufacturing condoms and period products with GOTS-certified organic cotton from Tanzania
-and latex from regenerative agroforestry in Thailand.
+DIGEST_SYSTEM = """Du schreibst einen monatlichen Regulierungs-Digest für ein kleines deutsches Startup
+(17 Mitarbeitende) das Kondome und Periodenprodukte herstellt – mit GOTS-zertifizierter Bio-Baumwolle
+aus Tansania und Latex aus regenerativer Agroforstwirtschaft in Thailand.
 
-You receive a list of pre-filtered relevant articles. Organise them into topic sections and write
-a concise, practical digest. Focus on what actually matters for this specific company.
-Reply ONLY with valid JSON, no markdown, no preamble."""
+Du erhältst eine Liste vorgefilterter relevanter Artikel. Gruppiere sie nach Themen und schreibe
+einen prägnanten, praxisorientierten Digest auf Deutsch. Fokussiere dich auf das, was für dieses
+Unternehmen konkret relevant ist.
+Antworte NUR mit gültigem JSON, kein Markdown, keine Einleitung."""
 
 
 def build_digest_prompt(relevant: list[dict]) -> str:
@@ -213,14 +215,14 @@ def build_digest_prompt(relevant: list[dict]) -> str:
 {articles}
 
 Organise these into the following 12 topics. For each topic:
-- Write a 2-3 sentence summary that is SPECIFIC and PRACTICAL:
-  * Name the actual regulation/directive (not just "new rules")
-  * State the concrete deadline or timeline if known
-  * Say exactly what the startup needs to DO or WATCH (not generic advice)
-  * Avoid phrases like "the startup must ensure compliance" – be specific about what compliance means here
-- Rate urgency: "high" (deadline within 12 months or immediate action needed), "medium" (watch closely, 1-2 years), "low" (early stage, FYI)
-- Pick up to 3 most relevant article links with short descriptive titles
-- If no articles fit a topic, set summary to null and urgency to "none"
+- Schreibe eine 2-3-Satz-Zusammenfassung auf Deutsch, die KONKRET und PRAXISORIENTIERT ist:
+  * Nenne die genaue Verordnung/Richtlinie (nicht nur "neue Regeln")
+  * Nenne konkrete Deadlines oder Zeitpläne wenn bekannt
+  * Sag genau was das Startup TUN oder BEOBACHTEN muss (keine generischen Ratschläge)
+  * Vermeide Phrasen wie "das Unternehmen muss Compliance sicherstellen" – sei spezifisch was das bedeutet
+- Bewerte die Dringlichkeit: "high" (Deadline in 12 Monaten oder sofortiger Handlungsbedarf), "medium" (beobachten, 1-2 Jahre), "low" (Frühphase, zur Info)
+- Wähle bis zu 3 der relevantesten Artikel-Links mit kurzen deutschen Titeln
+- Falls keine Artikel zu einem Thema passen: summary auf null setzen und urgency auf "none"
 
 Topics:
 {topics_str}
@@ -319,7 +321,7 @@ def post_to_slack(digest: dict, n_articles: int) -> None:
 
 
 URGENCY_COLOR = {"high": "#d93025", "medium": "#f5a623", "low": "#34a853", "none": "#9e9e9e"}
-URGENCY_LABEL = {"high": "HIGH IMPACT", "medium": "WATCH", "low": "FYI", "none": ""}
+URGENCY_LABEL = {"high": "DRINGEND", "medium": "BEOBACHTEN", "low": "ZUR INFO", "none": ""}
 
 
 def build_email_html(digest: dict, n_articles: int) -> str:
@@ -351,7 +353,7 @@ def build_email_html(digest: dict, n_articles: int) -> str:
     if no_news:
         no_news_html = f"""
         <div style="font-size:13px;color:#9e9e9e;margin-top:8px;">
-          No significant developments this month: {", ".join(no_news)}
+          Keine wesentlichen Entwicklungen diesen Monat: {", ".join(no_news)}
         </div>"""
 
     return f"""
@@ -360,8 +362,8 @@ def build_email_html(digest: dict, n_articles: int) -> str:
 
       <!-- Header -->
       <div style="background:#1a73e8;padding:28px 32px;">
-        <div style="color:#fff;font-size:22px;font-weight:700;">Sustainability Regulation Digest</div>
-        <div style="color:#c5d8f6;font-size:14px;margin-top:4px;">{month} &nbsp;·&nbsp; {n_articles} relevant articles</div>
+        <div style="color:#fff;font-size:22px;font-weight:700;">Regulierungs-Digest Nachhaltigkeit</div>
+        <div style="color:#c5d8f6;font-size:14px;margin-top:4px;">{month} &nbsp;·&nbsp; {n_articles} relevante Artikel</div>
       </div>
 
       <!-- Greeting -->
@@ -394,9 +396,9 @@ def build_email_html(digest: dict, n_articles: int) -> str:
         <p style="font-size:12px;color:#80868b;line-height:1.6;margin:0;">
           Diese E-Mail wird automatisch am 1. jedes Monats verschickt – ohne dass jemand etwas tun muss.
           Ein Python-Skript läuft auf GitHub Actions, liest sechs Nachrichtenfeeds zu EU-Regulierungen
-          (insgesamt ~50 Artikel) und schickt sie an OpenAI (GPT-4o-mini). Die KI entscheidet welche
-          Artikel für uns als Hersteller von Kondomen und Periodenprodukten relevant sind, gruppiert sie
-          nach Themen und schreibt die Zusammenfassungen. Das kostet ca. 0,01 € pro Monat.
+          (~50 Artikel) und schickt sie an OpenAI (GPT-4o-mini). Die KI entscheidet welche Artikel für uns
+          als Hersteller von Kondomen und Periodenprodukten relevant sind, gruppiert sie nach Themen und
+          schreibt die Zusammenfassungen auf Deutsch. Kosten: ca. 0,01 € pro Monat.
         </p>
       </div>
 
