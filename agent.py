@@ -247,10 +247,10 @@ def synthesise_digest(client: OpenAI, relevant: list[dict]) -> dict | None:
     resp = client.chat.completions.create(
         model=OPENAI_MODEL,
         response_format={"type": "json_object"},
-        max_tokens=4000,
+        max_tokens=8000,
         messages=[
             {"role": "system", "content": DIGEST_SYSTEM},
-            {"role": "user", "content": build_digest_prompt(relevant)},
+            {"role": "user", "content": build_digest_prompt(relevant[:50])},
         ],
     )
     raw = resp.choices[0].message.content.strip()
