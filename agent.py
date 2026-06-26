@@ -321,8 +321,9 @@ def post_to_slack(digest: dict, n_articles: int) -> None:
     print("-> Digest posted to Slack.")
 
 
-URGENCY_COLOR = {"high": "#d93025", "medium": "#f5a623", "low": "#34a853", "none": "#9e9e9e"}
-URGENCY_LABEL = {"high": "DRINGEND", "medium": "BEOBACHTEN", "low": "ZUR INFO", "none": ""}
+URGENCY_COLOR  = {"high": "#C0392B", "medium": "#E67E22", "low": "#27AE60", "none": "#95A5A6"}
+URGENCY_BG     = {"high": "#FDEDEC", "medium": "#FEF9E7", "low": "#EAFAF1", "none": "#F2F3F4"}
+URGENCY_LABEL  = {"high": "DRINGEND", "medium": "BEOBACHTEN", "low": "ZUR INFO", "none": ""}
 
 
 def build_email_html(digest: dict, n_articles: int) -> str:
@@ -336,70 +337,76 @@ def build_email_html(digest: dict, n_articles: int) -> str:
     topic_blocks = ""
     for topic in has_news:
         urgency = topic.get("urgency", "low")
-        color = URGENCY_COLOR.get(urgency, "#9e9e9e")
-        label = URGENCY_LABEL.get(urgency, "")
+        color   = URGENCY_COLOR.get(urgency, "#95A5A6")
+        bg      = URGENCY_BG.get(urgency, "#F2F3F4")
+        label   = URGENCY_LABEL.get(urgency, "")
         links_html = "".join(
-            f'<a href="{l["url"]}" style="color:#1a73e8;margin-right:16px;">{l["title"]}</a>'
+            f'<a href="{l["url"]}" style="display:inline-block;margin:4px 8px 4px 0;padding:5px 12px;'
+            f'background:#1B4332;color:#fff;text-decoration:none;border-radius:20px;font-size:12px;font-weight:600;">'
+            f'{l["title"]}</a>'
             for l in topic.get("links", [])[:3]
         )
         topic_blocks += f"""
-        <div style="margin-bottom:24px;padding:16px 20px;border-left:4px solid {color};background:#fafafa;border-radius:4px;">
-          <div style="font-size:13px;font-weight:700;color:{color};letter-spacing:.5px;margin-bottom:4px;">{label}</div>
-          <div style="font-size:16px;font-weight:600;color:#202124;margin-bottom:8px;">{topic["name"]}</div>
-          <div style="font-size:14px;color:#3c4043;line-height:1.6;margin-bottom:12px;">{topic.get("summary","")}</div>
-          <div style="font-size:13px;">{links_html}</div>
+        <div style="margin-bottom:20px;border-radius:10px;overflow:hidden;border:1px solid #E8F5E9;box-shadow:0 2px 6px rgba(0,0,0,.06);">
+          <div style="background:{bg};padding:10px 18px;display:flex;align-items:center;border-bottom:1px solid #E8F5E9;">
+            <span style="background:{color};color:#fff;font-size:11px;font-weight:700;letter-spacing:.8px;padding:3px 10px;border-radius:20px;margin-right:12px;">{label}</span>
+            <span style="font-size:16px;font-weight:700;color:#1B4332;">{topic["name"]}</span>
+          </div>
+          <div style="padding:14px 18px;background:#fff;">
+            <p style="font-size:14px;color:#2C3E50;line-height:1.7;margin:0 0 12px 0;">{topic.get("summary","")}</p>
+            <div>{links_html}</div>
+          </div>
         </div>"""
 
     no_news_html = ""
     if no_news:
         no_news_html = f"""
-        <div style="font-size:13px;color:#9e9e9e;margin-top:8px;">
-          Keine wesentlichen Entwicklungen diesen Monat: {", ".join(no_news)}
+        <div style="margin-top:8px;padding:12px 16px;background:#F9FBF9;border-radius:8px;border:1px solid #E8F5E9;">
+          <span style="font-size:12px;color:#7F8C8D;">Keine wesentlichen Entwicklungen diesen Monat: {", ".join(no_news)}</span>
         </div>"""
 
     return f"""
-    <!DOCTYPE html><html><body style="margin:0;padding:0;background:#f1f3f4;font-family:Arial,sans-serif;">
-    <div style="max-width:620px;margin:32px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.15);">
+    <!DOCTYPE html><html><body style="margin:0;padding:0;background:#F0F4F0;font-family:'Helvetica Neue',Arial,sans-serif;">
+    <div style="max-width:640px;margin:32px auto;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.12);">
 
       <!-- Header -->
-      <div style="background:#1a73e8;padding:28px 32px;">
-        <div style="color:#fff;font-size:22px;font-weight:700;">Regulierungs-Digest Nachhaltigkeit</div>
-        <div style="color:#c5d8f6;font-size:14px;margin-top:4px;">{month} &nbsp;·&nbsp; {n_articles} relevante Artikel</div>
+      <div style="background:#1B4332;padding:32px;">
+        <div style="font-size:11px;font-weight:700;color:#95D5B2;letter-spacing:2px;margin-bottom:8px;">EINHORN PRODUCTS · REGULIERUNGS-DIGEST</div>
+        <div style="color:#fff;font-size:26px;font-weight:800;line-height:1.2;">Nachhaltigkeits&shy;regulierung</div>
+        <div style="color:#95D5B2;font-size:14px;margin-top:8px;">{month} &nbsp;·&nbsp; {n_articles} relevante Artikel ausgewertet</div>
       </div>
 
       <!-- Greeting -->
-      <div style="padding:24px 32px 0 32px;">
-        <p style="font-size:15px;color:#202124;line-height:1.7;margin:0;">
+      <div style="background:#fff;padding:28px 32px 8px;">
+        <p style="font-size:15px;color:#2C3E50;line-height:1.8;margin:0;">
           Lieber Max, liebe Einhornler,<br><br>
-          das ist euer monatliches Regulierungs-Update zu den Themen
-          <strong>{active_topics}</strong>.
-          Hier sind die wichtigsten Entwicklungen des Monats:
+          das ist euer monatliches Update zu den Themen <strong style="color:#1B4332;">{active_topics}</strong>.
+          Hier sind die wichtigsten Entwicklungen:
         </p>
       </div>
 
       <!-- Topics -->
-      <div style="padding:20px 32px;">
+      <div style="background:#fff;padding:16px 32px 24px;">
         {topic_blocks}
         {no_news_html}
       </div>
 
       <!-- Contact -->
-      <div style="padding:16px 32px;background:#e8f0fe;border-top:1px solid #c5d8f6;">
-        <p style="font-size:14px;color:#1a73e8;margin:0;">
-          Wenn ihr Fragen dazu habt, meldet euch gerne bei
-          <a href="mailto:raffiruppert@gmail.com" style="color:#1a73e8;font-weight:600;">raffiruppert@gmail.com</a>
+      <div style="background:#D8F3DC;padding:18px 32px;border-top:2px solid #B7E4C7;">
+        <p style="font-size:14px;color:#1B4332;margin:0;">
+          Fragen zum Digest? Meldet euch bei
+          <a href="mailto:raffiruppert@gmail.com" style="color:#1B4332;font-weight:700;">raffiruppert@gmail.com</a>
         </p>
       </div>
 
-      <!-- Technical explanation -->
-      <div style="padding:20px 32px;background:#f8f9fa;border-top:1px solid #e8eaed;">
-        <p style="font-size:12px;color:#5f6368;margin:0 0 8px 0;font-weight:600;letter-spacing:.5px;">WIE FUNKTIONIERT DAS?</p>
-        <p style="font-size:12px;color:#80868b;line-height:1.6;margin:0;">
-          Diese E-Mail wird automatisch am 1. jedes Monats verschickt – ohne dass jemand etwas tun muss.
-          Ein Python-Skript läuft auf GitHub Actions, liest sechs Nachrichtenfeeds zu EU-Regulierungen
-          (~50 Artikel) und schickt sie an OpenAI (GPT-4o-mini). Die KI entscheidet welche Artikel für uns
-          als Hersteller von Kondomen und Periodenprodukten relevant sind, gruppiert sie nach Themen und
-          schreibt die Zusammenfassungen auf Deutsch. Kosten: ca. 0,01 € pro Monat.
+      <!-- Tech footer -->
+      <div style="background:#1B4332;padding:20px 32px;">
+        <p style="font-size:11px;color:#52B788;font-weight:700;letter-spacing:1px;margin:0 0 6px 0;">WIE FUNKTIONIERT DAS?</p>
+        <p style="font-size:12px;color:#95D5B2;line-height:1.6;margin:0;">
+          Diese E-Mail wird automatisch am 1. jedes Monats verschickt.
+          Ein Python-Skript auf GitHub Actions liest 12 Nachrichtenfeeds (~120 Artikel),
+          filtert mit OpenAI (GPT-4o-mini) was für Kondom- und Periodenprodukthersteller relevant ist,
+          und schreibt den Digest auf Deutsch. Kosten: ca. 0,01 € pro Monat.
         </p>
       </div>
 
