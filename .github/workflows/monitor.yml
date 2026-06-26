@@ -1,0 +1,50 @@
+name: Sustainability Regulation Digest
+
+on:
+  schedule:
+    # 1st of every month at 07:00 UTC (= 08:00/09:00 CET/CEST)
+    - cron: "0 7 1 * *"
+  workflow_dispatch: {}   # run manually from the Actions tab
+
+permissions:
+  contents: write          # needed to write back state.json
+
+concurrency:
+  group: sustainability-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Run agent
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+          FEED_URLS: ${{ vars.FEED_URLS }}
+          RELEVANCE_CRITERIA: ${{ vars.RELEVANCE_CRITERIA }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+        run: python agent.py
+
+      - name: Write back state.json (only if changed)
+        run: |
+          if [[ -n "$(git status --porcelain state.json)" ]]; then
+            git config user.name  "sustainability-digest-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add state.json
+            git commit -m "chore: update digest state [skip ci]"
+            git push
+          else
+            echo "No state update needed."
+          fi
