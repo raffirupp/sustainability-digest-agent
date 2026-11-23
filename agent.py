@@ -32,6 +32,14 @@ FEED_URLS = [u.strip() for u in os.environ.get("FEED_URLS", "").split(",") if u.
 SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", "")
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 RELEVANCE_CRITERIA = os.environ.get("RELEVANCE_CRITERIA", "EU sustainability legislation.")
+# Kundenspezifisches steht nicht im Quelltext, damit das Repo öffentlich sein kann.
+# Gesetzt werden diese drei als GitHub-Variablen (Settings, Secrets and variables, Actions).
+BRAND_LABEL = os.environ.get("BRAND_LABEL", "Regulierungs-Digest")
+GREETING = os.environ.get("GREETING", "Hallo zusammen,")
+COMPANY_PROFILE = os.environ.get(
+    "COMPANY_PROFILE",
+    "ein kleines deutsches Unternehmen, das physische Produkte herstellt und in der EU verkauft",
+)
 STATE_FILE = Path(os.environ.get("STATE_FILE", "state.json"))
 MAX_ITEMS_PER_RUN = int(os.environ.get("MAX_ITEMS_PER_RUN", "120"))
 POST_ON_FIRST_RUN = os.environ.get("POST_ON_FIRST_RUN", "false").lower() == "true"
@@ -193,9 +201,7 @@ def filter_articles(client: OpenAI, items: list[dict]) -> list[dict]:
 # Step 2: Synthesise structured digest
 # --------------------------------------------------------------------------- #
 
-DIGEST_SYSTEM = """Du schreibst einen monatlichen Regulierungs-Digest für ein kleines deutsches Startup
-(17 Mitarbeitende) das Kondome und Periodenprodukte herstellt – mit GOTS-zertifizierter Bio-Baumwolle
-aus Tansania und Latex aus regenerativer Agroforstwirtschaft in Thailand.
+DIGEST_SYSTEM = f"""Du schreibst einen monatlichen Regulierungs-Digest für {COMPANY_PROFILE}.
 
 Du erhältst eine Liste vorgefilterter relevanter Artikel. Gruppiere sie nach Themen und schreibe
 einen prägnanten, praxisorientierten Digest auf Deutsch. Fokussiere dich auf das, was für dieses
@@ -383,7 +389,7 @@ def build_email_html(digest: dict, n_articles: int) -> str:
 
       <!-- Header -->
       <div style="background:#1B4332;padding:32px;">
-        <div style="font-size:11px;font-weight:700;color:#95D5B2;letter-spacing:2px;margin-bottom:8px;">EINHORN PRODUCTS · REGULIERUNGS-DIGEST</div>
+        <div style="font-size:11px;font-weight:700;color:#95D5B2;letter-spacing:2px;margin-bottom:8px;">{BRAND_LABEL.upper()}</div>
         <div style="color:#fff;font-size:26px;font-weight:800;line-height:1.2;">Nachhaltigkeits&shy;regulierung</div>
         <div style="color:#95D5B2;font-size:14px;margin-top:8px;">{month} &nbsp;·&nbsp; {n_articles} relevante Artikel ausgewertet</div>
       </div>
@@ -391,7 +397,7 @@ def build_email_html(digest: dict, n_articles: int) -> str:
       <!-- Greeting -->
       <div style="background:#fff;padding:28px 32px 8px;">
         <p style="font-size:15px;color:#2C3E50;line-height:1.8;margin:0;">
-          Lieber Max, liebe Einhornler,<br><br>
+          {GREETING}<br><br>
           das ist euer monatliches Update zu den Themen <strong style="color:#1B4332;">{active_topics}</strong>.
           Hier sind die wichtigsten Entwicklungen:
         </p>
@@ -417,7 +423,7 @@ def build_email_html(digest: dict, n_articles: int) -> str:
         <p style="font-size:12px;color:#95D5B2;line-height:1.6;margin:0;">
           Diese E-Mail wird automatisch am 1. jedes Monats verschickt.
           Ein Python-Skript auf GitHub Actions liest 12 Nachrichtenfeeds (~120 Artikel),
-          filtert mit OpenAI (GPT-4o-mini) was für Kondom- und Periodenprodukthersteller relevant ist,
+          filtert mit OpenAI (GPT-4o-mini) was davon für euch relevant ist,
           und schreibt den Digest auf Deutsch. Kosten: ca. 0,01 € pro Monat.
         </p>
       </div>

@@ -35,6 +35,9 @@ jobs:
           FEED_URLS: ${{ vars.FEED_URLS }}
           RELEVANCE_CRITERIA: ${{ vars.RELEVANCE_CRITERIA }}
           OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+          COMPANY_PROFILE: ${{ vars.COMPANY_PROFILE }}
+          BRAND_LABEL: ${{ vars.BRAND_LABEL }}
+          GREETING: ${{ vars.GREETING }}
         run: python agent.py
 
       - name: Write back state.json (only if changed)
